@@ -1,7 +1,7 @@
 POST http://127.0.0.1:8000/users/signup
 Content-Type: application/json
 
-{ "username": "1234eric", "password": "Pass1Eric", "email": "eric@mail.com", "first_name": "Eric" }
+{ "username": "adam123", "password": "Pass1234!", "email": "adam@mail.com", "first_name": "Adam" }
 
 ###
 
@@ -18,3 +18,12 @@ Content-Type: application/json
 GET http://127.0.0.1:8000/users/test_tokenPerfil 
 Content-Type: application/json 
 Authorization: Token 50401ab93130b6061f7cb722f017bf65c85acfc0
+
+###
+
+DELETE http://127.0.0.1:8000/users/delete
+Content-Type: application/json
+
+{ 
+    "username": "adam123"
+}

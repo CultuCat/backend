@@ -26,9 +26,25 @@ class PerfilView(viewsets.ModelViewSet):
         if self.request.auth is None:
             return Response(status=status.HTTP_401_UNAUTHORIZED, data={'error': "El token d'autentificació no ha sigut donat."})
 
-        user = Token.objects.get(key=self.request.auth.key).user
 
-        if request.method == 'PUT':
+        if request.method == 'GET':
+            profiles = Perfil.objects.all()
+            response_data = []
+
+            for profile in profiles:
+                token, _ = Token.objects.get_or_create(user=profile.user)
+                serializer = PerfilSerializer(instance=profile.user)
+                
+                user_data = {
+                    'token': token.key,
+                    'user': serializer.data
+                }
+                response_data.append(user_data)
+
+            return Response(response_data)
+
+        elif request.method == 'PUT':
+            user = Token.objects.get(key=self.request.auth.key).user
             newImage = request.data.get('imatge', None)
             newBio = request.data.get('bio', None)
 
@@ -47,8 +63,8 @@ class PerfilView(viewsets.ModelViewSet):
             else:
                 print(f"La consulta tomó {elapsed_time} segundos")
 
-        serializer = PerfilSerializer(user.perfil)
-        return Response(status=status.HTTP_200_OK, data={*serializer.data, *{'message': "S'ha actualitzat el perfil"}})
+            serializer = PerfilSerializer(user.perfil)
+            return Response(status=status.HTTP_200_OK, data={*serializer.data, *{'message': "S'ha actualitzat el perfil"}})
     
 @api_view(['POST'])
 def signup_perfil(request):
@@ -93,6 +109,15 @@ def login_perfil(request):
     serializer = PerfilSerializer(instance=user)
     return Response({'token': token.key, 'user': serializer.data})
 
+@api_view(['DELETE'])
+def delete_perfil(request):
+    try:
+        user = get_object_or_404(Perfil, username=request.data['username'])
+    except Perfil.DoesNotExist:
+        return Response({'detail': 'Usuari no trobat'}, status=status.HTTP_404_NOT_FOUND)
+    user.delete()
+    return Response({'detail': 'Usuari eliminat correctament'}, status=status.HTTP_200_OK)
+
 class TagsPreferits(APIView):
     def delete(self, request, user_id, tag_name):
         try:
@@ -114,3 +139,4 @@ class TagsPreferits(APIView):
             return Response({"error": f"El usuario {user.username} no existe"}, status=status.HTTP_404_NOT_FOUND)
         except Tag.DoesNotExist:
             return Response({"error": f"El tag con ID {tag_name} no existe"}, status=status.HTTP_404_NOT_FOUND)
+
