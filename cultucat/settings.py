@@ -76,7 +76,7 @@ CORS_ALLOWED_ORIGINS = [
 
 
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE']
-CORS_ALLOW_HEADERS = ['Content-Type']
+CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization']
 
 ROOT_URLCONF = 'cultucat.urls'
 

@@ -1,7 +1,8 @@
 from django.db import models
 
 class Tag(models.Model):
-    nom = models.CharField(primary_key=True)
+    id = models.AutoField(primary_key=True)
+    nom = models.CharField(null=True, unique=True)
 
     @classmethod
     def get_or_createTag(cls, nom):

@@ -1,6 +1,7 @@
 from django.db import models
 from spaces.models import Space
 from tags.models import Tag
+from tags.serializers import TagSerializer
 from django.utils.translation import gettext_lazy as _
 
 def split_colon(obj):
@@ -41,3 +42,54 @@ class Event(models.Model):
                     enllac_imatges.append(imatge)
             return enllac_imatges
         return imatges
+
+    @property
+    def espai_info(self):
+        if self.espai:
+            return {
+                'id': self.espai.id,
+                'nom': self.espai.nom
+            }
+        return None
+
+    @property
+    def tags_info(self):
+        tags = self.tags.all()
+        if tags:
+            return [
+                {'id': tag.id, 'nom': tag.nom} for tag in tags
+            ]
+        return None
+
+    @classmethod
+    def create_event(cls, event_data):
+        espai_nom = event_data.get('espai')
+        latitud = event_data['latitud']
+        longitud = event_data['longitud']
+
+        espai = Space.get_or_createSpace(nom=espai_nom, latitud=latitud, longitud=longitud)
+
+        event = cls.objects.create(
+            id=event_data.get('id'),
+            dataIni=event_data.get('dataIni'),
+            dataFi=event_data.get('dataFi'),
+            nom=event_data.get('nom'),
+            descripcio=event_data.get('descripcio'),
+            preu=event_data.get('preu'),
+            horaris=event_data.get('horaris'),
+            enllac=event_data.get('enllac'),
+            adreca=event_data.get('adreca'),
+            imatge=event_data.get('imatge'),
+            latitud=latitud,
+            longitud=longitud,
+            espai=espai,
+            isAdminCreated=True
+        )
+
+        tags_data = event_data.get('tags')
+        if tags_data:
+            for tag_name in tags_data:
+                tag = Tag.get_or_createTag(nom=tag_name)
+                event.tags.add(tag)
+
+        return event

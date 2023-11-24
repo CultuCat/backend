@@ -11,25 +11,33 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 import time
+from user.permissions import IsAdmin
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 class EventView(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     models = Event
+    permission_classes = [IsAuthenticatedOrReadOnly] 
+    authentication_classes = [TokenAuthentication]
     pagination_class = PageNumberPagination
     pagination_class.page_size = 50
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
 
     ordering_fields = ['dataIni']
-
     filterset_fields = ['espai']
 
-    apply_permissions = False
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.query_params.get('ordering'):
+            queryset = queryset.order_by('dataIni')
+        return queryset
 
-    def get_permissions(self):
-        if self.action == 'create' and self.apply_permissions:
+    def get_permission_classes(self):
+        if self.action == 'create':
             return [IsAdmin()]
         else:
-            return []
+            return [IsAuthenticatedOrReadOnly()]
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -52,7 +60,9 @@ class EventView(viewsets.ModelViewSet):
         return resultado
 
     def create(self, request, *args, **kwargs):
-        event = request.data.copy()
+        if not request.user.is_staff or not request.user.is_superuser:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        event_data = request.data.copy()
 
         # Per asegurar-se que l'id no es repeteix, agafarem el mes antic i li restarem 1
         last_event = Event.objects.all().order_by('id').first()
@@ -60,22 +70,10 @@ class EventView(viewsets.ModelViewSet):
             id = last_event.id - 1
         else:
             id = 99999999999
-        event['id'] = id
-        Space.get_or_createSpace(nom = event['espai'], latitud = event['latitud'], longitud = event['longitud'])
-        
-        tags_data = event.get('tags')
-        
-        if tags_data:
-            for tag_name in tags_data:
-                Tag.get_or_createTag(nom=tag_name)
-
-        event['isAdminCreated'] = True
-
-        serializer = self.get_serializer(data=event)
-        serializer.is_valid(raise_exception=True)
+        event_data['id'] = id
 
         start_time = time.time()
-        self.perform_create(serializer)
+        event = Event.create_event(event_data)
         end_time = time.time()
         elapsed_time = end_time - start_time
 
@@ -83,6 +81,8 @@ class EventView(viewsets.ModelViewSet):
             print(f"La consulta tomó más de 2 segundos: {elapsed_time} segundos")
         else:
             print(f"La consulta tomó {elapsed_time} segundos")
+
+        serializer = self.get_serializer(event)¡
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

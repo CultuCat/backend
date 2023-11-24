@@ -45,8 +45,9 @@ class TestDiscounts(TestCase):
         
         response = self.client.get('/discounts/', query_params)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 3)
         #el orden es ascendente según nombre de trofeo, nivelTrofeo, los usados no se listan
         self.assertEqual(response.data[0]['codi'], "BBBBBB")
         self.assertEqual(response.data[1]['codi'], "AAAAAA")
+        self.assertEqual(response.data[2]['codi'], "CCCCCC")
     

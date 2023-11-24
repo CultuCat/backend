@@ -1,7 +1,8 @@
 from django.db import models
 
 class Space(models.Model):
-    nom = models.CharField(primary_key=True)
+    id = models.AutoField(primary_key=True)
+    nom = models.CharField(null=True, unique=True)
     latitud = models.FloatField()
     longitud = models.FloatField()
 

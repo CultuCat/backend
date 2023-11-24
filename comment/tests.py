@@ -6,13 +6,16 @@ from events.models import Event
 from trophy.models import Trophy
 from .models import Comment
 from .views import CommentsView
+from rest_framework.authtoken.models import Token
 
 #class Test for model Commment
 class TestComments(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         
-        self.user = Perfil.objects.create(id=1,username='test_user', is_active=True)
+        self.user = Perfil.objects.create(id=1, username='test_user', is_active=True)
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
         self.esdeveniment1 = Event.objects.create(id=1, nom="test_event1")
         self.esdeveniment2 = Event.objects.create(id=2, nom="test_event2")
         self.comment1 = Comment.objects.create(
@@ -45,11 +48,10 @@ class TestComments(TestCase):
             'text': 'test_comment',
             'event': 1
         }
-        CommentsView.apply_permissions = False
-        response = self.client.post('/comments/', data, format='json')
+        headers = {'HTTP_AUTHORIZATION': f'Token {self.token.key}'}
+        response = self.client.post('/comments/', data, format='json', **headers)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Comment.objects.count(), 3)
-        CommentsView.apply_permissions = True
     
     #GET by id TestCase
     def test_get_specific_comment(self):

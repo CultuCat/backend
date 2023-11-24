@@ -4,4 +4,4 @@ from .models import Space
 class SpaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Space
-        fields = ('nom', 'latitud', 'longitud')
+        fields = ('id', 'nom', 'latitud', 'longitud')

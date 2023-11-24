@@ -1,23 +1,23 @@
 POST http://127.0.0.1:8000/users/signup
 Content-Type: application/json
 
-{ "username": "adam123", "password": "Pass1234!", "email": "adam@mail.com", "first_name": "Adam" }
+{ "username": "nuriacn2", "password": "nuria1232", "email": "nuria2@mail.com", "first_name": "Nuria", "puntuacio": 4}
 
-###
+### 
 
 POST http://127.0.0.1:8000/users/login
 Content-Type: application/json
 
 { 
-    "username": "adam123", 
-    "password": "Pass1234!" 
+    "username": "nuriacn", 
+    "password": "nuria123" 
 }
 
 ###
 
 GET http://127.0.0.1:8000/users/test_tokenPerfil 
 Content-Type: application/json 
-Authorization: Token 50401ab93130b6061f7cb722f017bf65c85acfc0
+Authorization: Token 4083f2871e5caeb3c791c3d73c777614fbad6cf7
 
 ###
 
@@ -26,4 +26,63 @@ Content-Type: application/json
 
 { 
     "username": "adam123"
+}
+
+###
+
+GET http://127.0.0.1:8000/users/
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:8000/users/23/
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:8000/users/?username=eric
+Content-Type: application/json
+
+###
+
+PUT http://127.0.0.1:8000/users/2/wants_to_talk_perfil/
+Content-Type: application/json
+
+{ 
+    "wantsToTalk": true 
+}
+
+###
+
+PUT http://127.0.0.1:8000/users/2/is_visible_perfil/
+Content-Type: application/json
+
+{ 
+    "isVisible": true 
+}
+
+###
+#token no admin: 4083f2871e5caeb3c791c3d73c777614fbad6cf7 - id:6
+#token admin: 21262f8874fe335ccf98c423cc3f5ad57dafaf69
+
+PUT http://127.0.0.1:8000/users/6/block_profile/
+Content-Type: application/json
+Authorization: Token 21262f8874fe335ccf98c423cc3f5ad57dafaf69
+
+{ 
+    "isBlocked": false
+}
+
+
+###
+
+GET http://127.0.0.1:8000/users/?ordering=-puntuacio
+Content-Type: application/json
+
+###
+
+PUT http://127.0.0.1:8000/users/23/edit/
+Content-Type: application/json
+Authorization: Token 6f51246fe924c05485b6fa5cbb5d639e88ffea3b
+
+{
+    "bio": "holii" 
 }

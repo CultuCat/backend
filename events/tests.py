@@ -4,11 +4,17 @@ from rest_framework import status
 from .models import Event
 from spaces.models import Space
 from tags.models import Tag
+from user.models import Perfil
 from .views import EventView
+from rest_framework.authtoken.models import Token
 
 class EventViewTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
+
+        self.user = Perfil.objects.create(id=1, username='test_user', is_active=True, is_staff=True, is_superuser=True)
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
 
         self.tag1 = Tag.objects.create(nom='Tag1')
         self.tag2 = Tag.objects.create(nom='Tag2')
@@ -71,7 +77,8 @@ class EventViewTestCase(TestCase):
             'espai': 'Espacio de Prueba 2',
             'tags': ['tag4', 'tag5']
         }
-        response = self.client.post('/events/', data, format='json')
+        headers = {'HTTP_AUTHORIZATION': f'Token {self.token.key}'}
+        response = self.client.post('/events/', data, format='json', **headers)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Event.objects.count(), 4)
         self.assertEqual(Space.objects.count(), 3)
@@ -94,7 +101,8 @@ class EventViewTestCase(TestCase):
             'espai': 'Espacio de Prueba',
             'tags': ['tag4', 'tag5']
         }
-        response = self.client.post('/events/', data, format='json')
+        headers = {'HTTP_AUTHORIZATION': f'Token {self.token.key}'}
+        response = self.client.post('/events/', data, format='json', **headers)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Event.objects.count(), 4)
         self.assertEqual(Space.objects.count(), 2)
@@ -108,15 +116,15 @@ class EventViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_list_events_by_espai(self):
-        espai_name = 'Otro Espacio'
-        response = self.client.get(f'/events/?ordering=-dataIni&espai={espai_name}')
+        espai_id = self.event1.espai.id
+        response = self.client.get(f'/events/?espai={espai_id}')
 
         self.assertEqual(response.status_code, 200)
         events = response.data['results']
         self.assertTrue(events)
 
         event_in_response = next((event for event in events if event['id'] == self.event3.id), None)
-        self.assertIsNotNone(event_in_response) 
+        self.assertIsNone(event_in_response) 
     
     def test_get_specific_event(self):
         response = self.client.get(f'/events/{self.event1.id}/')
@@ -132,4 +140,4 @@ class EventViewTestCase(TestCase):
         self.assertEqual(response.data['adreca'], self.event1.adreca)
         self.assertEqual(response.data['latitud'], self.event1.latitud)
         self.assertEqual(response.data['longitud'], self.event1.longitud)
-        self.assertEqual(response.data['espai'], self.event1.espai.nom)
+        self.assertEqual(response.data['espai']['nom'], self.event1.espai.nom)
