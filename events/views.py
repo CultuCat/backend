@@ -82,7 +82,7 @@ class EventView(viewsets.ModelViewSet):
         else:
             print(f"La consulta tomó {elapsed_time} segundos")
 
-        serializer = self.get_serializer(event)¡
+        serializer = self.get_serializer(event)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
